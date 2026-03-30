@@ -11,6 +11,9 @@ dist
 dist-ssr
 *.local
 
+/admin panel
+admin panel
+
 .vscode/*
 !.vscode/extensions.json
 .idea
