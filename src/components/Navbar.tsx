@@ -1,12 +1,13 @@
 import { useState } from 'react';
 
 const AgentLogo = () => (
-  <div className="flex items-center">
-    <img
-      src="https://voice.agentnity.com/assets/agentnity-logo-white.png"
-      alt="Agentnity"
-      className="h-7 w-auto object-contain"
-    />
+  <div className="flex items-center gap-2">
+    <div className="h-7 w-7 rounded-lg bg-blue-500/15 border border-blue-500/20 flex items-center justify-center text-white text-[11px] font-bold tracking-wide">
+      AG
+    </div>
+    <span className="text-white font-semibold text-sm tracking-tight">
+      Agentnity
+    </span>
   </div>
 );
 

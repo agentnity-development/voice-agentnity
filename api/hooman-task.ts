@@ -6,17 +6,16 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const apiKey = process.env.HOOMAN_API_KEY;
-  const agentId = process.env.HOOMAN_AGENT_ID;
-  const campaignId = process.env.HOOMAN_CAMPAIGN;
-
-  if (!apiKey || !agentId || !campaignId) {
-    res.status(500).json({ message: 'Missing Hooman server configuration.' });
-    return;
-  }
-
   try {
     const requestBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const apiKey = process.env.HOOMAN_API_KEY || process.env.VITE_HOOMAN_API_KEY;
+    const agentId = process.env.HOOMAN_AGENT_ID || process.env.VITE_HOOMAN_AGENT_ID || requestBody?.agent;
+    const campaignId = process.env.HOOMAN_CAMPAIGN || process.env.VITE_HOOMAN_CAMPAIGN || requestBody?.campaign;
+
+    if (!apiKey || !agentId || !campaignId) {
+      res.status(500).json({ message: 'Missing Hooman server configuration. Add HOOMAN_API_KEY, HOOMAN_AGENT_ID, and HOOMAN_CAMPAIGN in Vercel.' });
+      return;
+    }
 
     const payload = {
       ...requestBody,
