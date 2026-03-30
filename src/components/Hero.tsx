@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 
-const HOOMAN_API_KEY  = import.meta.env.VITE_HOOMAN_API_KEY  as string;
 const HOOMAN_AGENT_ID = import.meta.env.VITE_HOOMAN_AGENT_ID as string;
 const HOOMAN_CAMPAIGN = import.meta.env.VITE_HOOMAN_CAMPAIGN  as string;
+const HOOMAN_TASK_ENDPOINT = '/api/hooman-task';
 
 const USE_CASES = [
   { label: 'Admissions follow-up', value: 'admissions_followup' },
@@ -104,11 +104,10 @@ function LiveDemoCard() {
     setStatus('loading');
 
     try {
-      const res = await fetch('/hooman/routes/v1/tasks/', {
+      const res = await fetch(HOOMAN_TASK_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${HOOMAN_API_KEY}`,
         },
         body: JSON.stringify({
           phone:    `+91${normalizedPhone}`,
