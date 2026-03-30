@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 const HOOMAN_AGENT_ID = import.meta.env.VITE_HOOMAN_AGENT_ID as string;
 const HOOMAN_CAMPAIGN = import.meta.env.VITE_HOOMAN_CAMPAIGN  as string;
 const HOOMAN_TASK_ENDPOINT = '/api/hooman-task';
+const GOOGLE_SHEET_ENDPOINT = '/api/google-sheet-lead';
 
 const USE_CASES = [
   { label: 'Admissions follow-up', value: 'admissions_followup' },
@@ -78,6 +79,7 @@ function LiveDemoCard() {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  const [sheetSyncError, setSheetSyncError] = useState('');
   const [taskId, setTaskId] = useState('');
   const submitted = useRef(false);
 
@@ -87,6 +89,38 @@ function LiveDemoCard() {
     if (!name.trim()) return 'Please enter your full name.';
     if (!/^\d{10}$/.test(normalizedPhone)) return 'Enter a valid 10-digit Indian mobile number.';
     return '';
+  };
+
+  const saveLead = async (payload: {
+    currentDate: string;
+    currentTime: string;
+    status: 'success' | 'error';
+    taskId?: string;
+    error?: string;
+  }) => {
+    const response = await fetch(GOOGLE_SHEET_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: name.trim(),
+        phone: `+91${normalizedPhone}`,
+        useCase: selected.label,
+        taskId: payload.taskId || '',
+        status: payload.status,
+        source: 'hero_form',
+        currentDate: payload.currentDate,
+        currentTime: payload.currentTime,
+        error: payload.error || '',
+      }),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(data?.message || `Google Sheets sync failed with status ${response.status}`);
+    }
   };
 
   const handleSubmit = async () => {
@@ -102,6 +136,7 @@ function LiveDemoCard() {
 
     submitted.current = true;
     setError('');
+    setSheetSyncError('');
     setTaskId('');
     setStatus('loading');
 
@@ -145,11 +180,32 @@ function LiveDemoCard() {
       }
 
       setTaskId(data.taskId);
+      try {
+        await saveLead({
+          currentDate,
+          currentTime,
+          status: 'success',
+          taskId: data.taskId,
+        });
+      } catch (sheetError) {
+        setSheetSyncError(sheetError instanceof Error ? sheetError.message : 'The lead was not saved to Google Sheets.');
+      }
       setStatus('success');
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      try {
+        await saveLead({
+          currentDate,
+          currentTime,
+          status: 'error',
+          error: message,
+        });
+      } catch (sheetError) {
+        setSheetSyncError(sheetError instanceof Error ? sheetError.message : 'The lead was not saved to Google Sheets.');
+      }
       submitted.current = false;
       setStatus('error');
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setError(message);
     }
   };
 
@@ -170,6 +226,11 @@ function LiveDemoCard() {
         {taskId && (
           <p className="text-[11px] text-gray-500 break-all">
             Task ID: <span className="text-white">{taskId}</span>
+          </p>
+        )}
+        {sheetSyncError && (
+          <p className="text-[11px] text-amber-300 leading-relaxed">
+            Google Sheets sync issue: {sheetSyncError}
           </p>
         )}
         <p className="text-[10px] text-gray-700 tracking-wide">One-time AI experience. No spam.</p>
@@ -265,7 +326,14 @@ function LiveDemoCard() {
 
         {/* Validation error */}
         {error && (
-          <p className="text-red-400 text-[11px] px-1">{error}</p>
+          <p className="text-xs text-red-300 mt-1.5 px-1">
+            {error}
+          </p>
+        )}
+        {sheetSyncError && (
+          <p className="text-xs text-amber-300 mt-1.5 px-1">
+            Google Sheets sync issue: {sheetSyncError}
+          </p>
         )}
 
         {/* CTA */}
