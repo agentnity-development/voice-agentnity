@@ -1,8 +1,65 @@
+import { createSign } from 'node:crypto';
 import { defineConfig } from 'vite';
 import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { appendLeadToGoogleSheet } from './lib/googleSheets';
-import type { GoogleSheetsEnv } from './lib/googleSheets';
+
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GOOGLE_SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+function toBase64Url(value: string) {
+  return Buffer.from(value)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+async function getGoogleAccessToken(clientEmail: string, privateKey: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = toBase64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = toBase64Url(JSON.stringify({
+    iss: clientEmail,
+    scope: GOOGLE_SHEETS_SCOPE,
+    aud: GOOGLE_TOKEN_URL,
+    exp: now + 3600,
+    iat: now,
+  }));
+
+  const unsignedToken = `${header}.${payload}`;
+  const signer = createSign('RSA-SHA256');
+  signer.update(unsignedToken);
+  signer.end();
+
+  const signature = signer
+    .sign(privateKey)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: `${unsignedToken}.${signature}`,
+    }).toString(),
+  });
+
+  const data = await response.json().catch(() => null) as {
+    access_token?: string;
+    error_description?: string;
+    error?: string;
+  } | null;
+
+  if (!response.ok || !data?.access_token) {
+    throw new Error(data?.error_description || data?.error || 'Failed to get Google Sheets access token.');
+  }
+
+  return data.access_token as string;
+}
 
 function sendJson(res: any, statusCode: number, payload: unknown) {
   res.statusCode = statusCode;
@@ -30,8 +87,55 @@ function devGoogleSheetsProxy(env: Record<string, string>) {
           });
 
           const requestBody = body ? JSON.parse(body) : {};
-          const result = await appendLeadToGoogleSheet(env as GoogleSheetsEnv, requestBody);
-          sendJson(res, 200, result);
+          const spreadsheetId = env.GOOGLE_SHEETS_SPREADSHEET_ID || env.GOOGLE_SHEET_ID;
+          const range = env.GOOGLE_SHEETS_RANGE || 'Leads!A:J';
+          const clientEmail = env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+          const privateKey = env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+          if (!spreadsheetId || !clientEmail || !privateKey) {
+            sendJson(res, 500, {
+              message: 'Missing Google Sheets server configuration. Add GOOGLE_SHEETS_SPREADSHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY in .env.',
+            });
+            return;
+          }
+
+          const accessToken = await getGoogleAccessToken(clientEmail, privateKey);
+          const values = [[
+            new Date().toISOString(),
+            requestBody?.name || '',
+            requestBody?.phone || '',
+            requestBody?.useCase || '',
+            requestBody?.taskId || '',
+            requestBody?.status || '',
+            requestBody?.source || 'hero_form',
+            requestBody?.currentDate || '',
+            requestBody?.currentTime || '',
+            requestBody?.error || '',
+          ]];
+
+          const response = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({ values }),
+            }
+          );
+
+          const data = await response.json().catch(() => null) as {
+            updates?: unknown;
+            message?: string;
+          } | null;
+
+          if (!response.ok) {
+            sendJson(res, response.status, data ?? { message: `Google Sheets request failed with status ${response.status}` });
+            return;
+          }
+
+          sendJson(res, 200, { success: true, updates: data?.updates ?? null });
         } catch (error) {
           sendJson(res, 500, {
             message: error instanceof Error ? error.message : 'Something went wrong while saving the lead to Google Sheets.',

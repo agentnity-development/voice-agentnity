@@ -1,26 +1,98 @@
-import { appendLeadToGoogleSheet } from '../lib/googleSheets';
-import type { GoogleSheetsEnv } from '../lib/googleSheets';
+import { createSign } from 'node:crypto';
 
-async function parseRequestBody(req: any) {
-  if (typeof req.body === 'string') {
-    return req.body ? JSON.parse(req.body) : {};
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GOOGLE_SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+function toBase64Url(value: string) {
+  return Buffer.from(value)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function extractGoogleErrorMessage(data: unknown, fallback: string) {
+  if (!data || typeof data !== 'object') {
+    return fallback;
   }
 
-  if (req.body && typeof req.body === 'object') {
-    return req.body;
+  const payload = data as {
+    message?: unknown;
+    error?: unknown;
+  };
+
+  if (typeof payload.message === 'string' && payload.message.trim()) {
+    return payload.message;
   }
 
-  const rawBody = await new Promise<string>((resolve, reject) => {
-    const chunks: Buffer[] = [];
+  if (typeof payload.error === 'string' && payload.error.trim()) {
+    return payload.error;
+  }
 
-    req.on('data', (chunk: Buffer | string) => {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    });
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    req.on('error', reject);
+  if (payload.error && typeof payload.error === 'object') {
+    const nestedError = payload.error as {
+      message?: unknown;
+      status?: unknown;
+      details?: unknown;
+    };
+
+    if (typeof nestedError.message === 'string' && nestedError.message.trim()) {
+      return nestedError.message;
+    }
+
+    if (typeof nestedError.status === 'string' && nestedError.status.trim()) {
+      return nestedError.status;
+    }
+  }
+
+  return fallback;
+}
+
+async function getGoogleAccessToken(clientEmail: string, privateKey: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = toBase64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = toBase64Url(JSON.stringify({
+    iss: clientEmail,
+    scope: GOOGLE_SHEETS_SCOPE,
+    aud: GOOGLE_TOKEN_URL,
+    exp: now + 3600,
+    iat: now,
+  }));
+
+  const unsignedToken = `${header}.${payload}`;
+  const signer = createSign('RSA-SHA256');
+  signer.update(unsignedToken);
+  signer.end();
+
+  const signature = signer
+    .sign(privateKey)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: `${unsignedToken}.${signature}`,
+    }).toString(),
   });
 
-  return rawBody ? JSON.parse(rawBody) : {};
+  const data = await response.json().catch(() => null) as {
+    access_token?: string;
+    error_description?: string;
+    error?: string;
+  } | null;
+
+  if (!response.ok || !data?.access_token) {
+    throw new Error(data?.error_description || data?.error || 'Failed to get Google Sheets access token.');
+  }
+
+  return data.access_token as string;
 }
 
 export default async function handler(req: any, res: any) {
@@ -30,11 +102,57 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const requestBody = await parseRequestBody(req);
-    const result = await appendLeadToGoogleSheet(process.env as GoogleSheetsEnv, requestBody);
-    res.status(200).json(result);
+    const requestBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || process.env.GOOGLE_SHEET_ID;
+    const range = process.env.GOOGLE_SHEETS_RANGE || 'Leads!A:J';
+    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+    if (!spreadsheetId || !clientEmail || !privateKey) {
+      res.status(500).json({
+        message: 'Missing Google Sheets server configuration. Add GOOGLE_SHEETS_SPREADSHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY in Vercel.',
+      });
+      return;
+    }
+
+    const accessToken = await getGoogleAccessToken(clientEmail, privateKey);
+    const values = [[
+      new Date().toISOString(),
+      requestBody?.name || '',
+      requestBody?.phone || '',
+      requestBody?.useCase || '',
+      requestBody?.taskId || '',
+      requestBody?.status || '',
+      requestBody?.source || 'hero_form',
+      requestBody?.currentDate || '',
+      requestBody?.currentTime || '',
+      requestBody?.error || '',
+    ]];
+
+    const response = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ values }),
+      }
+    );
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      res.status(response.status).json({
+        message: extractGoogleErrorMessage(data, `Google Sheets request failed with status ${response.status}`),
+        details: data,
+      });
+      return;
+    }
+
+    res.status(200).json({ success: true, updates: data?.updates ?? null });
   } catch (error) {
-    console.error('Google Sheets lead sync failed.', error);
     res.status(500).json({
       message: error instanceof Error ? error.message : 'Something went wrong while saving the lead to Google Sheets.',
     });
