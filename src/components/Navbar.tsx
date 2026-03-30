@@ -1,13 +1,19 @@
 import { useState } from 'react';
 
+const navItems = [
+  { label: 'Advantages', href: '#advantages' },
+  { label: 'Use Cases', href: '#use-cases' },
+  { label: 'Get Started', href: '#cta' },
+];
+
 const AgentLogo = () => (
-  <div className="flex items-center">
+  <a href="#hero" className="flex items-center">
     <img
       src="https://res.cloudinary.com/dom4xx6ky/image/upload/v1774536095/54c47f64-e0e7-484e-9786-93276315e886_rzyktn.png"
       alt="Agentnity"
       className="h-8 w-auto object-contain"
     />
-  </div>
+  </a>
 );
 
 export default function Navbar() {
@@ -21,21 +27,21 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            {['Solutions', 'AI Agents', 'Pricing', 'Resources'].map((item) => (
+            {navItems.map((item) => (
               <a
-                key={item}
-                href="#"
+                key={item.label}
+                href={item.href}
                 className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
-                {item}
+                {item.label}
               </a>
             ))}
           </div>
 
           <div className="hidden md:block">
-            <button className="bg-blue-500 hover:bg-blue-600 transition-colors text-white text-sm font-semibold px-5 py-2 rounded-full">
+            <a href="#live-demo" className="bg-blue-500 hover:bg-blue-600 transition-colors text-white text-sm font-semibold px-5 py-2 rounded-full inline-flex">
               Try now
-            </button>
+            </a>
           </div>
 
           {/* Mobile hamburger */}
@@ -54,14 +60,14 @@ export default function Navbar() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden border-t border-white/8 px-5 py-4 flex flex-col gap-4 rounded-b-2xl">
-            {['Solutions', 'AI Agents', 'Pricing', 'Resources'].map((item) => (
-              <a key={item} href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
-                {item}
+            {navItems.map((item) => (
+              <a key={item.label} href={item.href} className="text-sm text-gray-400 hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>
+                {item.label}
               </a>
             ))}
-            <button className="bg-blue-500 hover:bg-blue-600 transition-colors text-white text-sm font-semibold px-5 py-2 rounded-full w-fit">
+            <a href="#live-demo" className="bg-blue-500 hover:bg-blue-600 transition-colors text-white text-sm font-semibold px-5 py-2 rounded-full w-fit inline-flex" onClick={() => setMobileOpen(false)}>
               Try now
-            </button>
+            </a>
           </div>
         )}
       </nav>

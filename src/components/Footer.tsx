@@ -1,17 +1,26 @@
 const AgentLogo = () => (
-  <div className="flex items-center">
+  <a href="#hero" className="flex items-center">
     <img
       src="https://res.cloudinary.com/dom4xx6ky/image/upload/v1774536095/54c47f64-e0e7-484e-9786-93276315e886_rzyktn.png"
       alt="Agentnity"
       className="h-8 w-auto object-contain"
     />
-  </div>
+  </a>
 );
 
 const footerLinks = {
-  Resources: ['Solutions', 'Capabilities', 'Demo'],
-  Company: ['About', 'Careers', 'Contact'],
-  Legal: ['Privacy Policy', 'Terms', 'Security'],
+  Explore: [
+    { label: 'Home', href: '#hero' },
+    { label: 'Advantages', href: '#advantages' },
+  ],
+  Solutions: [
+    { label: 'Use Cases', href: '#use-cases' },
+    { label: 'Live Demo', href: '#live-demo' },
+  ],
+  GetStarted: [
+    { label: 'Next Step', href: '#cta' },
+    { label: 'Book Demo', href: '#live-demo' },
+  ],
 };
 
 export default function Footer() {
@@ -47,11 +56,11 @@ export default function Footer() {
               </p>
               {links.map((link) => (
                 <a
-                  key={link}
-                  href="#"
+                  key={link.label}
+                  href={link.href}
                   className="text-gray-500 hover:text-white text-sm transition-colors"
                 >
-                  {link}
+                  {link.label}
                 </a>
               ))}
             </div>

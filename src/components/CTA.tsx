@@ -1,6 +1,6 @@
 export default function CTA() {
   return (
-    <section className="bg-[#06060f] py-24 px-4 sm:px-6">
+    <section id="cta" className="bg-[#06060f] py-24 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <div className="relative rounded-3xl border border-white/10 bg-[#0e0e24] overflow-hidden p-10 sm:p-14 text-center">
           {/* Glow blobs */}
@@ -20,12 +20,12 @@ export default function CTA() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <button className="bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-sm px-7 py-3.5 rounded-full shadow-lg shadow-blue-500/25">
+              <a href="#live-demo" className="bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-sm px-7 py-3.5 rounded-full shadow-lg shadow-blue-500/25 inline-flex">
                 Book Product Demo
-              </button>
-              <button className="bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-white font-semibold text-sm px-7 py-3.5 rounded-full">
+              </a>
+              <a href="#advantages" className="bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-white font-semibold text-sm px-7 py-3.5 rounded-full inline-flex">
                 Speak to an Expert
-              </button>
+              </a>
             </div>
           </div>
         </div>

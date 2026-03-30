@@ -21,7 +21,7 @@ const cases = [
 
 export default function UseCases() {
   return (
-    <section className="bg-[#080812] py-24 px-4 sm:px-6">
+    <section id="use-cases" className="bg-[#080812] py-24 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <p className="text-center text-[10px] text-blue-400 font-semibold uppercase tracking-[0.2em] mb-3">
           Use Cases at Scale
@@ -33,7 +33,7 @@ export default function UseCases() {
           Specialized voice journeys for admissions, support, and high-volume operational teams.
         </p>
         <div className="flex justify-center mb-10">
-          <a href="#" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors">
+          <a href="#live-demo" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors">
             See live scenarios
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

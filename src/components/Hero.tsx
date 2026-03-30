@@ -15,7 +15,7 @@ type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen bg-[#080812] overflow-hidden flex items-center">
+    <section id="hero" className="relative min-h-screen bg-[#080812] overflow-hidden flex items-center">
       <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/4 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-700/8 rounded-full blur-[120px] translate-x-1/4 translate-y-1/4 pointer-events-none" />
 
@@ -40,20 +40,22 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-wrap gap-3 mt-1">
-              <button className="bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-sm px-5 py-2.5 rounded-full flex items-center gap-2">
+              <a href="#live-demo" className="bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-sm px-5 py-2.5 rounded-full flex items-center gap-2">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 Watch Demo
-              </button>
-              <button className="hover:bg-white/5 border border-white/10 transition-all text-gray-400 hover:text-white font-medium text-sm px-5 py-2.5 rounded-full">
+              </a>
+              <a href="#use-cases" className="hover:bg-white/5 border border-white/10 transition-all text-gray-400 hover:text-white font-medium text-sm px-5 py-2.5 rounded-full inline-flex items-center">
                 See Live Scenarios
-              </button>
+              </a>
             </div>
           </div>
 
           {/* Right */}
-          <LiveDemoCard />
+          <div id="live-demo">
+            <LiveDemoCard />
+          </div>
         </div>
 
         {/* City strip */}

@@ -33,7 +33,7 @@ const advantages = [
 
 export default function CoreAdvantages() {
   return (
-    <section className="bg-[#06060f] py-24 px-4 sm:px-6">
+    <section id="advantages" className="bg-[#06060f] py-24 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         {/* Label */}
         <p className="text-center text-[10px] text-blue-400 font-semibold uppercase tracking-[0.2em] mb-4">
