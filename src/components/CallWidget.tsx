@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const HOOMAN_AGENT_ID = import.meta.env.VITE_HOOMAN_AGENT_ID as string | undefined;
 const HOOMAN_WIDGET_SCRIPT = 'https://core.hoomanlabs.com/scripts/web';
+let hoomanWidgetScriptPromise: Promise<void> | null = null;
 
 type HoomanVoiceBotOptions = {
   agentId: string;
@@ -25,6 +26,41 @@ declare global {
   }
 }
 
+function loadHoomanWidgetScript() {
+  if (window.HoomanVoiceBot) {
+    return Promise.resolve();
+  }
+
+  if (hoomanWidgetScriptPromise) {
+    return hoomanWidgetScriptPromise;
+  }
+
+  hoomanWidgetScriptPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${HOOMAN_WIDGET_SCRIPT}"]`);
+
+    const handleLoad = () => resolve();
+    const handleError = () => reject(new Error('Unable to load the Hooman voice widget right now.'));
+
+    if (existingScript) {
+      existingScript.addEventListener('load', handleLoad, { once: true });
+      existingScript.addEventListener('error', handleError, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = HOOMAN_WIDGET_SCRIPT;
+    script.async = true;
+    script.addEventListener('load', handleLoad, { once: true });
+    script.addEventListener('error', handleError, { once: true });
+    document.body.appendChild(script);
+  }).catch((error) => {
+    hoomanWidgetScriptPromise = null;
+    throw error;
+  });
+
+  return hoomanWidgetScriptPromise;
+}
+
 export default function CallWidget() {
   const botContainerRef = useRef<HTMLDivElement>(null);
   const botRef = useRef<HoomanVoiceBotInstance | null>(null);
@@ -37,57 +73,38 @@ export default function CallWidget() {
       return;
     }
 
-    let createdScript: HTMLScriptElement | null = null;
-    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${HOOMAN_WIDGET_SCRIPT}"]`);
+    let cancelled = false;
 
-    const initializeBot = () => {
-      if (!window.HoomanVoiceBot || !botContainerRef.current || botRef.current) return;
+    const initializeBot = async () => {
+      try {
+        await loadHoomanWidgetScript();
 
-      setScriptError('');
-      botRef.current = new window.HoomanVoiceBot({
-        agentId: HOOMAN_AGENT_ID,
-        parent: botContainerRef.current,
-        context: JSON.stringify({ name: 'Customer', source: 'call_widget_section' }),
-        onCallId: (nextCallId: string) => setCallId(nextCallId),
-        fg: '#DEE2E6',
-        bg: '#101125',
-        accent: '#3B82F6',
-        border: 'rgba(255,255,255,0.12)',
-      });
+        if (cancelled || !window.HoomanVoiceBot || !botContainerRef.current || botRef.current) return;
+
+        setScriptError('');
+        botRef.current = new window.HoomanVoiceBot({
+          agentId: HOOMAN_AGENT_ID,
+          parent: botContainerRef.current,
+          context: JSON.stringify({ name: 'Customer', source: 'call_widget_section' }),
+          onCallId: (nextCallId: string) => setCallId(nextCallId),
+          fg: '#DEE2E6',
+          bg: '#101125',
+          accent: '#3B82F6',
+          border: 'rgba(255,255,255,0.12)',
+        });
+      } catch (error) {
+        if (!cancelled) {
+          setScriptError(error instanceof Error ? error.message : 'Unable to load the Hooman voice widget right now.');
+        }
+      }
     };
 
-    const handleScriptError = () => {
-      setScriptError('Unable to load the Hooman voice widget right now.');
-    };
-
-    if (window.HoomanVoiceBot) {
-      initializeBot();
-    } else if (existingScript) {
-      existingScript.addEventListener('load', initializeBot);
-      existingScript.addEventListener('error', handleScriptError);
-    } else {
-      createdScript = document.createElement('script');
-      createdScript.src = HOOMAN_WIDGET_SCRIPT;
-      createdScript.async = true;
-      createdScript.addEventListener('load', initializeBot);
-      createdScript.addEventListener('error', handleScriptError);
-      document.body.appendChild(createdScript);
-    }
+    initializeBot();
 
     return () => {
+      cancelled = true;
       botRef.current?.handleCleanup();
       botRef.current = null;
-
-      if (createdScript) {
-        createdScript.removeEventListener('load', initializeBot);
-        createdScript.removeEventListener('error', handleScriptError);
-        document.body.removeChild(createdScript);
-      }
-
-      if (existingScript) {
-        existingScript.removeEventListener('load', initializeBot);
-        existingScript.removeEventListener('error', handleScriptError);
-      }
     };
   }, []);
 
