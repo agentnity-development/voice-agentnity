@@ -8,35 +8,44 @@ const AgentLogo = () => (
   </a>
 );
 
-const footerLinks = {
-  Explore: [
-    { label: 'Home', href: '#hero' },
-    { label: 'Advantages', href: '#advantages' },
-  ],
-  Solutions: [
-    { label: 'Use Cases', href: '#use-cases' },
-    { label: 'Live Demo', href: '#live-demo' },
-  ],
-  GetStarted: [
-    { label: 'Next Step', href: '#cta' },
-    { label: 'Book Demo', href: '#live-demo' },
-  ],
-};
+const footerLinks = [
+  {
+    heading: 'Explore',
+    links: [
+      { label: 'Home', href: '#hero' },
+      { label: 'Advantages', href: '#advantages' },
+    ],
+  },
+  {
+    heading: 'Solutions',
+    links: [
+      { label: 'Use Cases', href: '#use-cases' },
+      { label: 'Live Demo', href: '#live-demo' },
+    ],
+  },
+  {
+    heading: 'Get Started',
+    links: [
+      { label: 'Next Step', href: '#cta' },
+      { label: 'Book Demo', href: '#live-demo' },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-[#080812] border-t border-white/5 px-4 sm:px-6 pt-14 pb-8">
+    <footer className="bg-[#080812] border-t border-white/5 px-4 sm:px-6 pt-12 sm:pt-14 pb-8">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mb-12">
+        <div className="flex flex-col gap-8 sm:gap-10 mb-12">
           {/* Brand */}
-          <div className="col-span-2 sm:col-span-1 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 items-center text-center sm:items-start sm:text-left">
             <AgentLogo />
             <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">
               Leading multilingual voice AI for education, support, and regional customer
               experience across Bharat.
             </p>
             {/* Address */}
-            <div className="mt-2">
+            <div className="hidden sm:block mt-2">
               <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest mb-2">
                 Address
               </p>
@@ -49,22 +58,24 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          {Object.entries(footerLinks).map(([heading, links]) => (
-            <div key={heading} className="flex flex-col gap-3">
-              <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest">
-                {heading}
-              </p>
-              {links.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-gray-500 hover:text-white text-sm transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          ))}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 max-w-md sm:max-w-none mx-auto sm:mx-0 w-full">
+            {footerLinks.map(({ heading, links }, index) => (
+              <div key={heading} className={`flex flex-col gap-3 text-center sm:text-left ${index === 2 ? 'hidden sm:flex sm:col-span-1 sm:items-start' : ''}`}>
+                <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest">
+                  {heading}
+                </p>
+                {links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-gray-500 hover:text-white text-sm transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Bottom bar */}

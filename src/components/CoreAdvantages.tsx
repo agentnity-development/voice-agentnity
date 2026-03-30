@@ -33,7 +33,7 @@ const advantages = [
 
 export default function CoreAdvantages() {
   return (
-    <section id="advantages" className="bg-[#06060f] py-24 px-4 sm:px-6">
+    <section id="advantages" className="bg-[#06060f] py-20 sm:py-24 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         {/* Label */}
         <p className="text-center text-[10px] text-blue-400 font-semibold uppercase tracking-[0.2em] mb-4">
@@ -41,20 +41,20 @@ export default function CoreAdvantages() {
         </p>
 
         {/* Heading */}
-        <h2 className="text-center text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
+        <h2 className="text-center text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
           Engineered for the Indian Subcontinent
         </h2>
-        <p className="text-center text-gray-500 text-base max-w-xl mx-auto mb-16 leading-relaxed">
+        <p className="text-center text-gray-500 text-sm sm:text-base max-w-xl mx-auto mb-12 sm:mb-16 leading-relaxed">
           Sophisticated voice models that don't just speak. They understand pace, accents,
           multilingual switching, and high-volume support contexts.
         </p>
 
         {/* Cards */}
-        <div className="grid sm:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
           {advantages.map(({ icon, label, desc }) => (
             <div
               key={label}
-              className="bg-[#0e0e24] border border-white/8 rounded-2xl p-7 flex flex-col gap-4 hover:border-blue-500/30 hover:bg-[#0d1a2d] transition-all duration-300 group"
+              className="bg-[#0e0e24] border border-white/8 rounded-2xl p-5 sm:p-7 flex flex-col gap-4 items-center sm:items-start text-center sm:text-left hover:border-blue-500/30 hover:bg-[#0d1a2d] transition-all duration-300 group"
             >
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/15 transition-all">
                 {icon}

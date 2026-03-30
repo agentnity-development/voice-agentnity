@@ -16,44 +16,44 @@ type Status = 'idle' | 'loading' | 'success' | 'error';
 export default function Hero() {
   return (
     <section id="hero" className="relative min-h-screen bg-[#080812] overflow-hidden flex items-center">
-      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/4 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-700/8 rounded-full blur-[120px] translate-x-1/4 translate-y-1/4 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[420px] h-[420px] sm:w-[600px] sm:h-[600px] bg-blue-600/15 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/4 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[360px] h-[360px] sm:w-[500px] sm:h-[500px] bg-blue-700/8 rounded-full blur-[120px] translate-x-1/4 translate-y-1/4 pointer-events-none" />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 w-full pt-28 pb-20">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 w-full pt-24 sm:pt-28 pb-16 sm:pb-20">
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Left */}
-          <div className="flex flex-col gap-5">
-            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/8 rounded-full px-3.5 py-1.5 w-fit">
+          <div className="flex flex-col gap-5 items-center text-center md:items-start md:text-left mx-auto md:mx-0">
+            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/8 rounded-full px-3.5 py-1.5 w-fit mx-auto md:mx-0">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
               <span className="text-[11px] text-blue-300 font-medium tracking-widest uppercase">
                 Localized for Bharat • 12+ languages
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-extrabold leading-[1.1] text-white">
-              Your AI is ready.{' '}
-              <span className="text-blue-400">Talk to it in 2 minutes.</span>
+            <h1 className="text-3xl sm:text-5xl lg:text-[3.6rem] font-extrabold leading-[1.1] text-white max-w-xl mx-auto md:mx-0">
+              Your AI is ready.
+              <span className="block text-blue-400">Talk to it in 2 minutes.</span>
             </h1>
 
-            <p className="text-gray-500 text-[15px] leading-relaxed max-w-sm">
+            <p className="text-gray-500 text-[15px] leading-relaxed max-w-md md:max-w-sm mx-auto md:mx-0">
               Multilingual voice agents that sound natural, reduce wait times, and help teams across education and enterprise move faster.
             </p>
 
-            <div className="flex flex-wrap gap-3 mt-1">
-              <a href="#live-demo" className="bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-sm px-5 py-2.5 rounded-full flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 mt-1 items-center justify-center md:justify-start mx-auto md:mx-0">
+              <a href="#live-demo" className="bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-sm px-5 py-2.5 rounded-full flex items-center justify-center gap-2 w-full sm:w-auto">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 Watch Demo
               </a>
-              <a href="#use-cases" className="hover:bg-white/5 border border-white/10 transition-all text-gray-400 hover:text-white font-medium text-sm px-5 py-2.5 rounded-full inline-flex items-center">
+              <a href="#use-cases" className="hover:bg-white/5 border border-white/10 transition-all text-gray-400 hover:text-white font-medium text-sm px-5 py-2.5 rounded-full inline-flex items-center justify-center w-full sm:w-auto">
                 See Live Scenarios
               </a>
             </div>
           </div>
 
           {/* Right */}
-          <div id="live-demo">
+          <div id="live-demo" className="w-full">
             <LiveDemoCard />
           </div>
         </div>
@@ -155,7 +155,7 @@ function LiveDemoCard() {
 
   if (status === 'success') {
     return (
-      <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-8 w-full max-w-md mx-auto flex flex-col items-center text-center gap-4">
+      <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 sm:p-8 w-full max-w-md mx-auto flex flex-col items-center text-center gap-4">
         <div className="w-12 h-12 rounded-full bg-green-500/15 border border-green-500/20 flex items-center justify-center">
           <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -178,9 +178,9 @@ function LiveDemoCard() {
   }
 
   return (
-    <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 w-full max-w-md mx-auto">
+    <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3 mb-6 text-center sm:text-left">
         <div>
           <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-[0.18em] mb-1.5">
             Experience it now
@@ -189,7 +189,7 @@ function LiveDemoCard() {
             Trigger a live voice AI call
           </h3>
         </div>
-        <span className="bg-green-500/15 text-green-400 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full border border-green-500/20 mt-0.5">
+        <span className="bg-green-500/15 text-green-400 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full border border-green-500/20 sm:mt-0.5">
           Live
         </span>
       </div>

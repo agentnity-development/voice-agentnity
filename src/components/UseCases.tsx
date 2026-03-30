@@ -21,18 +21,18 @@ const cases = [
 
 export default function UseCases() {
   return (
-    <section id="use-cases" className="bg-[#080812] py-24 px-4 sm:px-6">
+    <section id="use-cases" className="bg-[#080812] py-20 sm:py-24 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <p className="text-center text-[10px] text-blue-400 font-semibold uppercase tracking-[0.2em] mb-3">
           Use Cases at Scale
         </p>
-        <h2 className="text-center text-3xl sm:text-4xl lg:text-[2.8rem] font-extrabold text-white leading-tight mb-3">
+        <h2 className="text-center text-2xl sm:text-4xl lg:text-[2.8rem] font-extrabold text-white leading-tight mb-3">
           Built for Bharat's Scale
         </h2>
-        <p className="text-center text-gray-600 text-[15px] max-w-lg mx-auto mb-3 leading-relaxed">
+        <p className="text-center text-gray-600 text-sm sm:text-[15px] max-w-lg mx-auto mb-4 leading-relaxed">
           Specialized voice journeys for admissions, support, and high-volume operational teams.
         </p>
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-8 sm:mb-10">
           <a href="#live-demo" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors">
             See live scenarios
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,7 +67,7 @@ function UseCaseCard({
   wide?: boolean;
 }) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl group cursor-pointer ${wide ? 'h-72' : 'h-64'}`}>
+    <div className={`relative overflow-hidden rounded-2xl group cursor-pointer ${wide ? 'h-64 sm:h-72' : 'h-56 sm:h-64'}`}>
       {/* Image */}
       <img
         src={img}
@@ -85,13 +85,13 @@ function UseCaseCard({
       <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10 group-hover:ring-blue-500/30 transition-all duration-300" />
 
       {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+      <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
         {sublabel && (
           <span className="inline-block text-[9px] text-blue-300 font-bold uppercase tracking-[0.25em] mb-2.5 bg-blue-500/15 border border-blue-400/20 rounded-full px-2.5 py-1">
             {sublabel}
           </span>
         )}
-        <h3 className="text-white font-bold text-lg leading-snug">{label}</h3>
+        <h3 className="text-white font-bold text-base sm:text-lg leading-snug">{label}</h3>
       </div>
     </div>
   );
