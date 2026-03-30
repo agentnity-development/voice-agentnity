@@ -1,11 +1,10 @@
 const AgentLogo = () => (
-  <div className="flex items-center gap-2">
-    <div className="h-7 w-7 rounded-lg bg-blue-500/15 border border-blue-500/20 flex items-center justify-center text-white text-[11px] font-bold tracking-wide">
-      AG
-    </div>
-    <span className="text-white font-semibold text-sm tracking-tight">
-      Agentnity
-    </span>
+  <div className="flex items-center">
+    <img
+      src="https://res.cloudinary.com/dom4xx6ky/image/upload/v1774536095/54c47f64-e0e7-484e-9786-93276315e886_rzyktn.png"
+      alt="Agentnity"
+      className="h-8 w-auto object-contain"
+    />
   </div>
 );
 
