@@ -13,6 +13,7 @@ const footerLinks = [
     heading: 'Explore',
     links: [
       { label: 'Home', href: '#hero' },
+      { label: 'Widget', href: '#call' },
       { label: 'Advantages', href: '#advantages' },
     ],
   },
