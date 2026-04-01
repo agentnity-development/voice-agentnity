@@ -104,7 +104,7 @@ export default async function handler(req: any, res: any) {
   try {
     const requestBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || process.env.GOOGLE_SHEET_ID;
-    const range = process.env.GOOGLE_SHEETS_RANGE || 'Leads!A:J';
+    const range = process.env.GOOGLE_SHEETS_RANGE || 'Leads!A:L';
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
@@ -120,7 +120,9 @@ export default async function handler(req: any, res: any) {
       new Date().toISOString(),
       requestBody?.name || '',
       requestBody?.phone || '',
-      requestBody?.useCase || '',
+      requestBody?.email || '',
+      requestBody?.courseInterested || requestBody?.useCase || '',
+      requestBody?.city || '',
       requestBody?.taskId || '',
       requestBody?.status || '',
       requestBody?.source || 'hero_form',

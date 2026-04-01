@@ -1,6 +1,5 @@
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import CallWidget from './components/CallWidget';
 import CoreAdvantages from './components/CoreAdvantages';
 import UseCases from './components/UseCases';
 import CTA from './components/CTA';
@@ -11,7 +10,6 @@ function App() {
     <div className="font-poppins bg-[#080812] min-h-screen">
       <Navbar />
       <Hero />
-      <CallWidget />
       <CoreAdvantages />
       <UseCases />
       <CTA />

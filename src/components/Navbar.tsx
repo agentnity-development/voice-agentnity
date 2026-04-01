@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 const navItems = [
-  { label: 'Widget', href: '#call' },
   { label: 'Advantages', href: '#advantages' },
   { label: 'Use Cases', href: '#use-cases' },
   { label: 'Get Started', href: '#cta' },

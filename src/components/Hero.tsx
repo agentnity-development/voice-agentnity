@@ -1,18 +1,14 @@
 import { useState, useRef } from 'react';
+import SearchableSelect from './SearchableSelect';
+import { CITY_OPTIONS, COURSE_OPTIONS, COURSE_OPTIONS_BY_VALUE } from '../data/leadFormOptions';
 
 const HOOMAN_AGENT_ID = import.meta.env.VITE_HOOMAN_AGENT_ID as string;
 const HOOMAN_CAMPAIGN = import.meta.env.VITE_HOOMAN_CAMPAIGN  as string;
 const HOOMAN_TASK_ENDPOINT = '/api/hooman-task';
 const GOOGLE_SHEET_ENDPOINT = '/api/google-sheet-lead';
 
-const USE_CASES = [
-  { label: 'Admissions follow-up', value: 'admissions_followup' },
-  { label: 'Customer Support',     value: 'customer_support'    },
-  { label: 'Sales Outreach',       value: 'sales_outreach'      },
-  { label: 'Appointment Reminder', value: 'appointment_reminder'},
-];
-
 type Status = 'idle' | 'loading' | 'success' | 'error';
+type FieldErrors = Partial<Record<'name' | 'phone' | 'email' | 'courseInterested' | 'city', string>>;
 
 export default function Hero() {
   return (
@@ -73,22 +69,56 @@ export default function Hero() {
 }
 
 function LiveDemoCard() {
-  const [selected, setSelected] = useState(USE_CASES[0]);
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [courseInterested, setCourseInterested] = useState('');
+  const [city, setCity] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [sheetSyncError, setSheetSyncError] = useState('');
-  const [taskId, setTaskId] = useState('');
   const submitted = useRef(false);
 
   const normalizedPhone = phone.replace(/\s+/g, '').replace(/^0+/, '');
+  const selectedCourse = COURSE_OPTIONS_BY_VALUE.get(courseInterested) ?? null;
 
-  const validate = (): string => {
-    if (!name.trim()) return 'Please enter your full name.';
-    if (!/^\d{10}$/.test(normalizedPhone)) return 'Enter a valid 10-digit Indian mobile number.';
-    return '';
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors((current) => {
+      if (!current[field]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validate = (): FieldErrors => {
+    const nextErrors: FieldErrors = {};
+
+    if (!name.trim()) {
+      nextErrors.name = 'Please enter your name.';
+    }
+
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      nextErrors.phone = 'Enter a valid 10-digit Indian mobile number.';
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      nextErrors.email = 'Enter a valid email address.';
+    }
+
+    if (!courseInterested) {
+      nextErrors.courseInterested = 'Please select a course.';
+    }
+
+    if (!city) {
+      nextErrors.city = 'Please select your city.';
+    }
+
+    return nextErrors;
   };
 
   const saveLead = async (payload: {
@@ -106,7 +136,9 @@ function LiveDemoCard() {
       body: JSON.stringify({
         name: name.trim(),
         phone: `+91${normalizedPhone}`,
-        useCase: selected.label,
+        email: email.trim(),
+        courseInterested: selectedCourse?.label || '',
+        city,
         taskId: payload.taskId || '',
         status: payload.status,
         source: 'hero_form',
@@ -124,8 +156,14 @@ function LiveDemoCard() {
   };
 
   const handleSubmit = async () => {
-    const validationError = validate();
-    if (validationError) { setError(validationError); return; }
+    const nextErrors = validate();
+
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setError('');
+      return;
+    }
+
     if (submitted.current) return;
 
     const now = Date.now();
@@ -136,8 +174,8 @@ function LiveDemoCard() {
 
     submitted.current = true;
     setError('');
+    setFieldErrors({});
     setSheetSyncError('');
-    setTaskId('');
     setStatus('loading');
 
     try {
@@ -147,24 +185,34 @@ function LiveDemoCard() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone:    `+91${normalizedPhone}`,
-          agent:    HOOMAN_AGENT_ID,
+          phone: `+91${normalizedPhone}`,
+          agent: HOOMAN_AGENT_ID,
           campaign: HOOMAN_CAMPAIGN,
-          start:    900,
-          end:      2100,
+          start: 900,
+          end: 2100,
           startAfter: startAt,
           endAfter: expiresAt,
           timezone: 'Asia/Kolkata',
           context: {
-            studentName:   name.trim(),
-            studentPhone:  `+91${normalizedPhone}`,
-            programName:   selected.label,
-            callerType:    'student',
+            studentName: name.trim(),
+            studentPhone: `+91${normalizedPhone}`,
+            studentEmail: email.trim(),
+            studentCourse: selectedCourse?.label || '',
+            studentCity: city,
+            programName: selectedCourse?.label || '',
+            callerType: 'student',
             currentDate,
             currentTime,
             customer_name: name.trim(),
-            use_case:      selected.label,
-            source:        'hero_form',
+            customer_phone: `+91${normalizedPhone}`,
+            customer_email: email.trim(),
+            customer_city: city,
+            course_interested: selectedCourse?.label || '',
+            courseInterested: selectedCourse?.label || '',
+            use_case: selectedCourse?.label || '',
+            city,
+            email: email.trim(),
+            source: 'hero_form',
           },
         }),
       });
@@ -179,7 +227,6 @@ function LiveDemoCard() {
         throw new Error(data?.message || 'Task was not created in Hooman Labs.');
       }
 
-      setTaskId(data.taskId);
       try {
         await saveLead({
           currentDate,
@@ -193,6 +240,7 @@ function LiveDemoCard() {
       setStatus('success');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      const userMessage = 'We could not process your request right now. Please try again in a moment.';
       try {
         await saveLead({
           currentDate,
@@ -205,7 +253,7 @@ function LiveDemoCard() {
       }
       submitted.current = false;
       setStatus('error');
-      setError(message);
+      setError(userMessage);
     }
   };
 
@@ -218,21 +266,11 @@ function LiveDemoCard() {
           </svg>
         </div>
         <div>
-          <h3 className="text-white font-bold text-base mb-1">Call request accepted</h3>
+          <h3 className="text-white font-bold text-base mb-1">Request received</h3>
           <p className="text-gray-500 text-sm leading-relaxed">
-            Hooman created a task for <span className="text-white font-medium">+91 {normalizedPhone}</span>. If the phone does not ring, check this task in Hooman logs.
+            Someone from our team will connect with you shortly on <span className="text-white font-medium">+91 {normalizedPhone}</span>.
           </p>
         </div>
-        {taskId && (
-          <p className="text-[11px] text-gray-500 break-all">
-            Task ID: <span className="text-white">{taskId}</span>
-          </p>
-        )}
-        {sheetSyncError && (
-          <p className="text-[11px] text-amber-300 leading-relaxed">
-            Google Sheets sync issue: {sheetSyncError}
-          </p>
-        )}
         <p className="text-[10px] text-gray-700 tracking-wide">One-time AI experience. No spam.</p>
       </div>
     );
@@ -257,71 +295,100 @@ function LiveDemoCard() {
 
       <div className="flex flex-col gap-3">
 
-        {/* Custom Dropdown */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setOpen(!open)}
+        {/* Name */}
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 px-1">Your Name</label>
+          <input
+            type="text"
+            placeholder="Enter your name"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              clearFieldError('name');
+              setError('');
+            }}
             disabled={status === 'loading'}
-            className="w-full bg-white/5 border border-white/10 hover:border-white/20 text-white text-sm rounded-xl px-4 py-3 flex items-center justify-between transition-all focus:outline-none focus:border-blue-500/40 disabled:opacity-50"
-          >
-            <span className="font-medium">{selected.label}</span>
-            <svg
-              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {open && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#0d0d22] border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-black/60 z-20">
-              {USE_CASES.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => { setSelected(item); setOpen(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between
-                    ${selected.value === item.value
-                      ? 'bg-blue-500/15 text-blue-300'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                    }`}
-                >
-                  {item.label}
-                  {selected.value === item.value && (
-                    <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+            className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/40 text-white text-sm rounded-xl px-4 py-3 placeholder-gray-600 focus:outline-none transition-all disabled:opacity-50"
+          />
+          {fieldErrors.name && <p className="text-xs text-red-300 mt-1.5 px-1">{fieldErrors.name}</p>}
         </div>
 
-        {/* Name */}
-        <input
-          type="text"
-          placeholder="Full name"
-          value={name}
-          onChange={(e) => { setName(e.target.value); setError(''); }}
-          disabled={status === 'loading'}
-          className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/40 text-white text-sm rounded-xl px-4 py-3 placeholder-gray-600 focus:outline-none transition-all disabled:opacity-50"
-        />
-
         {/* Phone */}
-        <div className="flex gap-2">
-          <div className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 text-gray-400 text-sm font-medium whitespace-nowrap">
-            +91
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 px-1">Phone Number</label>
+          <div className="flex gap-2">
+            <div className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 text-gray-400 text-sm font-medium whitespace-nowrap">
+              +91
+            </div>
+            <input
+              type="tel"
+              placeholder="Enter your phone number"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                clearFieldError('phone');
+                setError('');
+              }}
+              disabled={status === 'loading'}
+              className="flex-1 bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/40 text-white text-sm rounded-xl px-4 py-3 placeholder-gray-600 focus:outline-none transition-all disabled:opacity-50"
+            />
           </div>
+          {fieldErrors.phone && <p className="text-xs text-red-300 mt-1.5 px-1">{fieldErrors.phone}</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 px-1">Email Id</label>
           <input
-            type="tel"
-            placeholder="10-digit number"
-            value={phone}
-            onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }}
+            type="email"
+            placeholder="Enter your email id"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              clearFieldError('email');
+              setError('');
+            }}
             disabled={status === 'loading'}
-            className="flex-1 bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/40 text-white text-sm rounded-xl px-4 py-3 placeholder-gray-600 focus:outline-none transition-all disabled:opacity-50"
+            className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/40 text-white text-sm rounded-xl px-4 py-3 placeholder-gray-600 focus:outline-none transition-all disabled:opacity-50"
           />
+          {fieldErrors.email && <p className="text-xs text-red-300 mt-1.5 px-1">{fieldErrors.email}</p>}
+        </div>
+
+        {/* Custom Dropdown */}
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 px-1">Course Interested</label>
+          <SearchableSelect
+            disabled={status === 'loading'}
+            emptyMessage="No matching courses found."
+            onChange={(value) => {
+              setCourseInterested(value);
+              clearFieldError('courseInterested');
+              setError('');
+            }}
+            options={COURSE_OPTIONS}
+            placeholder="Search and select a course"
+            searchPlaceholder="Search courses"
+            value={courseInterested}
+          />
+          {fieldErrors.courseInterested && <p className="text-xs text-red-300 mt-1.5 px-1">{fieldErrors.courseInterested}</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 px-1">City</label>
+          <SearchableSelect
+            allowCustomValue
+            disabled={status === 'loading'}
+            emptyMessage="No matching cities found. Type your city and press Enter."
+            onChange={(value) => {
+              setCity(value);
+              clearFieldError('city');
+              setError('');
+            }}
+            options={CITY_OPTIONS}
+            placeholder="Search, select, or type your city"
+            searchPlaceholder="Search or type your city"
+            value={city}
+          />
+          {fieldErrors.city && <p className="text-xs text-red-300 mt-1.5 px-1">{fieldErrors.city}</p>}
         </div>
 
         {/* Validation error */}

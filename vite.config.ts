@@ -88,7 +88,7 @@ function devGoogleSheetsProxy(env: Record<string, string>) {
 
           const requestBody = body ? JSON.parse(body) : {};
           const spreadsheetId = env.GOOGLE_SHEETS_SPREADSHEET_ID || env.GOOGLE_SHEET_ID;
-          const range = env.GOOGLE_SHEETS_RANGE || 'Leads!A:J';
+          const range = env.GOOGLE_SHEETS_RANGE || 'Leads!A:L';
           const clientEmail = env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
           const privateKey = env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
@@ -104,7 +104,9 @@ function devGoogleSheetsProxy(env: Record<string, string>) {
             new Date().toISOString(),
             requestBody?.name || '',
             requestBody?.phone || '',
-            requestBody?.useCase || '',
+            requestBody?.email || '',
+            requestBody?.courseInterested || requestBody?.useCase || '',
+            requestBody?.city || '',
             requestBody?.taskId || '',
             requestBody?.status || '',
             requestBody?.source || 'hero_form',

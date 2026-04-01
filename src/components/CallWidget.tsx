@@ -64,12 +64,11 @@ function loadHoomanWidgetScript() {
 export default function CallWidget() {
   const botContainerRef = useRef<HTMLDivElement>(null);
   const botRef = useRef<HoomanVoiceBotInstance | null>(null);
-  const [callId, setCallId] = useState<string | null>(null);
   const [scriptError, setScriptError] = useState('');
 
   useEffect(() => {
     if (!HOOMAN_AGENT_ID) {
-      setScriptError('Add VITE_HOOMAN_AGENT_ID to enable the website call widget.');
+      setScriptError('The call widget is unavailable right now.');
       return;
     }
 
@@ -86,7 +85,6 @@ export default function CallWidget() {
           agentId: HOOMAN_AGENT_ID,
           parent: botContainerRef.current,
           context: JSON.stringify({ name: 'Customer', source: 'call_widget_section' }),
-          onCallId: (nextCallId: string) => setCallId(nextCallId),
           fg: '#DEE2E6',
           bg: '#101125',
           accent: '#3B82F6',
@@ -94,7 +92,7 @@ export default function CallWidget() {
         });
       } catch (error) {
         if (!cancelled) {
-          setScriptError(error instanceof Error ? error.message : 'Unable to load the Hooman voice widget right now.');
+          setScriptError('The call widget is unavailable right now.');
         }
       }
     };
@@ -116,7 +114,7 @@ export default function CallWidget() {
           {!HOOMAN_AGENT_ID && (
             <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
               <p className="text-sm text-gray-500 leading-relaxed">
-                Add your Hooman agent ID to preview the website call widget here.
+                The call widget is unavailable right now.
               </p>
             </div>
           )}
@@ -126,12 +124,6 @@ export default function CallWidget() {
             </div>
           )}
         </div>
-
-        {callId && (
-          <p className="mt-4 text-xs text-gray-400 break-all text-center">
-            Call ID: {callId}
-          </p>
-        )}
       </div>
     </section>
   );
